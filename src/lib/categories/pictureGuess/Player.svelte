@@ -1,22 +1,27 @@
 <script lang="ts">
   import type { PlayerProps } from '../types';
-  import type { PictureGuessConfig } from './index';
+  import { effectiveStartLevel, type PictureGuessConfig } from './index';
   import { createRng } from '../../rng';
   import RevealImage from './RevealImage.svelte';
 
   let { config, seed, maxAttempts, onResult }: PlayerProps<PictureGuessConfig> = $props();
 
-  const MAX_STEPS = 4;
-  let step = $state(0);
+  const level = effectiveStartLevel(config);
+  let hintUsed = $state(false);
   let wrongPicks = $state<number[]>([]);
   let done = $state(false);
 
   const hasOptions = config.options.length > 0;
   const order = hasOptions ? createRng(seed).shuffle(config.options.map((_, i) => i)) : [];
-  const solution = hasOptions ? `Richtige Antwort: ${config.options[config.correctIndex]}` : undefined;
+
+  // Auflösung: richtige Antwort + optionaler Auflösungstext (z. B. Skin-Name)
+  const revealNote = config.reveal?.trim();
+  const solution = hasOptions
+    ? `Richtige Antwort: ${config.options[config.correctIndex]}${revealNote ? ` – ${revealNote}` : ''}`
+    : revealNote || undefined;
 
   // Nach der Antwort bekommt der Ergebnis-Screen das Original-Bild zur Auflösung
-  const revealImage = $derived(config.mode !== 'plain' ? config.imageUrl : undefined);
+  const revealImage = config.mode !== 'plain' ? config.imageUrl : undefined;
 
   function pick(i: number) {
     if (done || wrongPicks.includes(i)) return;
@@ -35,10 +40,14 @@
 
 <p class="question">{config.question}</p>
 
-<RevealImage src={config.imageUrl} mode={config.mode} {step} maxSteps={MAX_STEPS} strength={config.strength ?? 5} />
+<RevealImage src={config.imageUrl} mode={config.mode} {level} hint={hintUsed} />
 
-{#if config.mode !== 'plain' && step < MAX_STEPS}
-  <button class="btn full" onclick={() => step++}>🔍 Deutlicher zeigen</button>
+{#if config.mode !== 'plain'}
+  {#if !hintUsed}
+    <button class="btn full" onclick={() => (hintUsed = true)}>🔍 Hinweis nehmen: eine Stufe deutlicher (1×)</button>
+  {:else}
+    <p class="hint">🔍 Hinweis-Stufe aktiv – deutlicher wird es nicht.</p>
+  {/if}
 {/if}
 
 {#if hasOptions}
@@ -60,7 +69,7 @@
 {:else}
   <p class="judge-hint">Antwort laut sagen – der Quizmaster entscheidet:</p>
   <div class="btn-row">
-    <button class="btn correct" onclick={() => onResult(true, undefined, revealImage)}>✅ Richtig</button>
-    <button class="btn wrong" onclick={() => onResult(false, undefined, revealImage)}>❌ Falsch</button>
+    <button class="btn correct" onclick={() => onResult(true, solution, revealImage)}>✅ Richtig</button>
+    <button class="btn wrong" onclick={() => onResult(false, solution, revealImage)}>❌ Falsch</button>
   </div>
 {/if}

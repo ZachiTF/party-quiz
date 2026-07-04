@@ -44,15 +44,21 @@ export const NUM_POOL: NumEntry[] = [
   { question: 'Wie viele Champions gibt es ungefähr in League of Legends (2026)?', answer: 171, tolerance: 8 },
 ];
 
-export const FREE_POOL: string[] = [
-  'Nenne in 30 Sekunden 5 Pizzasorten!',
-  'Nenne 5 Länder, die mit "S" beginnen!',
-  'Mache 10 Kniebeugen – ohne umzufallen!',
-  'Erzähle einen Witz. Lacht mindestens eine Person, zählt es als richtig!',
-  'Summe ein bekanntes Lied, bis es jemand aus der Runde errät (max. 30 Sekunden)!',
-  'Sage das Alphabet rückwärts von K bis A!',
-  'Balanciere 10 Sekunden auf einem Bein – mit geschlossenen Augen!',
-  'Nenne 5 League-of-Legends-Champions, die mit "A" beginnen!',
-  'Sprich 20 Sekunden ohne Pause über ein Thema, das der Quizmaster vorgibt!',
-  'Zähle in 20 Sekunden 6 Dinge auf, die man in einer Küche findet – ohne Besteck zu nennen!',
+export interface FreeEntry {
+  prompt: string;
+  /** Zeitlimit in Sekunden, 0 = ohne Limit */
+  timeLimit: number;
+}
+
+export const FREE_POOL: FreeEntry[] = [
+  { prompt: 'Nenne 5 Pizzasorten!', timeLimit: 30 },
+  { prompt: 'Nenne 5 Länder, die mit "S" beginnen!', timeLimit: 30 },
+  { prompt: 'Mache 10 Kniebeugen – ohne umzufallen!', timeLimit: 0 },
+  { prompt: 'Erzähle einen Witz. Lacht mindestens eine Person, zählt es als richtig!', timeLimit: 0 },
+  { prompt: 'Summe ein bekanntes Lied, bis es jemand aus der Runde errät!', timeLimit: 30 },
+  { prompt: 'Sage das Alphabet rückwärts von K bis A!', timeLimit: 20 },
+  { prompt: 'Balanciere auf einem Bein – mit geschlossenen Augen, bis die Zeit um ist!', timeLimit: 10 },
+  { prompt: 'Nenne 5 League-of-Legends-Champions, die mit "A" beginnen!', timeLimit: 30 },
+  { prompt: 'Sprich ohne Pause über ein Thema, das der Quizmaster vorgibt!', timeLimit: 20 },
+  { prompt: 'Zähle 6 Dinge auf, die man in einer Küche findet – ohne Besteck zu nennen!', timeLimit: 20 },
 ];

@@ -17,7 +17,12 @@
     if (!Number.isFinite(guess)) return;
     attempts++;
     const delta = Math.abs(guess - config.answer);
-    const detail = `Richtige Antwort: ${config.answer.toLocaleString('de-DE')}${unitSuffix}`;
+    // absolute Toleranz erst in der Auflösung nennen – vorher verriete sie die Größenordnung
+    const tolNote =
+      config.tolerance > 0
+        ? ` (±${config.tolerance.toLocaleString('de-DE')}${config.toleranceType === 'pct' ? ' %' : unitSuffix} war noch richtig)`
+        : '';
+    const detail = `Richtige Antwort: ${config.answer.toLocaleString('de-DE')}${unitSuffix}${tolNote}`;
     if (delta <= allowedDelta(config)) {
       done = true;
       onResult(true, detail);
@@ -33,10 +38,11 @@
 
 <p class="question">{config.question}</p>
 
-{#if config.tolerance > 0}
-  <p class="hint">
-    Toleranz: ±{config.tolerance.toLocaleString('de-DE')}{config.toleranceType === 'pct' ? ' %' : unitSuffix}
-  </p>
+<!-- Absolute Toleranz würde die Größenordnung der Antwort verraten -> nur Prozent anzeigen -->
+{#if config.tolerance > 0 && config.toleranceType === 'pct'}
+  <p class="hint">Toleranz: ±{config.tolerance.toLocaleString('de-DE')} %</p>
+{:else if config.tolerance > 0}
+  <p class="hint">Es gibt eine Toleranz – sie wird erst mit der Auflösung verraten.</p>
 {/if}
 
 {#if hint}

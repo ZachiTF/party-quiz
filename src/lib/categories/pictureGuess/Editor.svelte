@@ -1,14 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { EditorProps } from '../types';
-  import type { PictureGuessConfig } from './index';
+  import { effectiveStartLevel, type PictureGuessConfig } from './index';
   import { loadChampions, loadChampionSkins, splashUrl, type Champion, type ChampionSkin } from '../../lol';
   import RevealImage from './RevealImage.svelte';
 
   let { config }: EditorProps<PictureGuessConfig> = $props();
 
+  // alte Speicherstände (strength 1-10 / ohne reveal) einmalig migrieren
+  config.startLevel = effectiveStartLevel(config);
+  config.reveal ??= '';
+
   let useOptions = $state(config.options.length > 0);
-  let previewStep = $state(0);
+  let previewHint = $state(false);
 
   // --- Champion-Splash-Auswahl (Data Dragon) ---
   let champions = $state<Champion[]>([]);
@@ -37,7 +41,8 @@
   function skinChosen() {
     if (splashChamp === '' || splashSkin === '') return;
     config.imageUrl = splashUrl(splashChamp, splashSkin);
-    previewStep = 0;
+    // Skin-Name als Auflösung übernehmen (wird nach der Antwort angezeigt)
+    config.reveal = skins.find((s) => s.num === splashSkin)?.name ?? '';
   }
 
   function toggleOptions(on: boolean) {
@@ -99,8 +104,8 @@
 
 {#if config.mode !== 'plain'}
   <label class="field">
-    <span>Schwierigkeit: <strong>{config.strength ?? 5}</strong>/10 (1 = leicht erkennbar, 10 = sehr schwer)</span>
-    <input type="range" min="1" max="10" step="1" bind:value={config.strength} />
+    <span>Startstufe: <strong>{config.startLevel}</strong>/5 (1 = extrem verpixelt, 5 = am gröbsten erkennbar)</span>
+    <input type="range" min="1" max="5" step="1" bind:value={config.startLevel} />
   </label>
 {/if}
 
@@ -109,12 +114,20 @@
     <img class="editor-preview" src={config.imageUrl} alt="Vorschau" loading="lazy" />
   {:else}
     <div class="field">
-      <span>Vorschau – so sieht es der Spieler (Regler = „Deutlicher zeigen"-Stufen)</span>
-      <RevealImage src={config.imageUrl} mode={config.mode} step={previewStep} maxSteps={4} strength={config.strength ?? 5} />
-      <input type="range" min="0" max="4" step="1" bind:value={previewStep} />
+      <span>Vorschau – exakt so sieht es der Spieler; im Quiz gibt es genau eine Hinweis-Stufe</span>
+      <RevealImage src={config.imageUrl} mode={config.mode} level={config.startLevel} hint={previewHint} />
+      <label class="field checkbox" style="margin-top: 0.4rem">
+        <input type="checkbox" bind:checked={previewHint} />
+        <span>Hinweis-Stufe (+1) anzeigen</span>
+      </label>
     </div>
   {/if}
 {/if}
+
+<label class="field">
+  <span>Auflösung nach der Antwort <small>(z. B. Skin-Name; wird beim Splash-Picker automatisch gesetzt)</small></span>
+  <input type="text" bind:value={config.reveal} placeholder="z. B. High Noon-Jhin" />
+</label>
 
 <label class="field checkbox">
   <input type="checkbox" checked={useOptions} onchange={(e) => toggleOptions(e.currentTarget.checked)} />

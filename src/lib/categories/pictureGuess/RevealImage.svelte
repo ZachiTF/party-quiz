@@ -4,19 +4,19 @@
   let {
     src,
     mode,
-    step,
-    maxSteps,
-    strength = 5,
-  }: { src: string; mode: PictureMode; step: number; maxSteps: number; strength?: number } = $props();
+    level,
+    hint = false,
+  }: { src: string; mode: PictureMode; level: number; hint?: boolean } = $props();
 
-  // Schwierigkeit 1..10 -> Start-Verpixelung bzw. Start-Zoom; die Schritte
-  // laufen geometrisch bis zum klaren Bild (letzter Schritt = Original)
-  const s = $derived(Math.min(10, Math.max(1, strength ?? 5)));
-  const startPixel = $derived(0.06 * Math.pow(0.008 / 0.06, (s - 1) / 9));
-  const startZoom = $derived(3 * Math.pow(12 / 3, (s - 1) / 9));
-  const progress = $derived(Math.min(step, maxSteps) / maxSteps);
-  const pixelFactor = $derived(mode === 'pixelate' ? Math.pow(startPixel, 1 - progress) : 1);
-  const zoomFactor = $derived(mode === 'zoom' ? Math.pow(startZoom, 1 - progress) : 1);
+  // 6 Stufen, alle bewusst tief im verpixelten/gezoomten Bereich mit feiner
+  // Abstufung: Startstufe 1–5 (Index 0–4) + genau eine Hinweis-Stufe (+1).
+  // Werte = Anteil der Originalauflösung bzw. Zoom-Faktor.
+  const PIXEL_LADDER = [0.006, 0.009, 0.013, 0.019, 0.028, 0.042];
+  const ZOOM_LADDER = [14, 11, 8.5, 6.5, 5, 3.8];
+
+  const idx = $derived(Math.min(5, Math.max(0, Math.round(level) - 1 + (hint ? 1 : 0))));
+  const pixelFactor = $derived(PIXEL_LADDER[idx]);
+  const zoomFactor = $derived(ZOOM_LADDER[idx]);
 
   let img = $state<HTMLImageElement | null>(null);
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -71,10 +71,6 @@
   </div>
 {:else}
   <img class="reveal-img" {src} alt="Rätselbild" onerror={() => (loadError = true)} />
-{/if}
-
-{#if mode !== 'plain'}
-  <p class="hint">Stufe {Math.min(step, maxSteps) + 1}/{maxSteps + 1}</p>
 {/if}
 
 <style>

@@ -6,6 +6,8 @@ import Player from './Player.svelte';
 
 export interface FreeTaskConfig {
   prompt: string;
+  /** Zeitlimit in Sekunden, 0 = ohne Limit (Timer läuft trotzdem mit) */
+  timeLimit: number;
 }
 
 export const freeTask: Category<FreeTaskConfig> = {
@@ -14,8 +16,11 @@ export const freeTask: Category<FreeTaskConfig> = {
   icon: '🎭',
   description: 'Eine Aufgabe zum Machen – der Quizmaster entscheidet, ob sie geschafft ist.',
   supportedJokers: ['askFriend'],
-  createDefault: () => ({ prompt: '' }),
-  generate: (rng: Rng) => ({ prompt: rng.pick(FREE_POOL) }),
+  createDefault: () => ({ prompt: '', timeLimit: 0 }),
+  generate: (rng: Rng) => {
+    const entry = rng.pick(FREE_POOL);
+    return { prompt: entry.prompt, timeLimit: entry.timeLimit };
+  },
   Editor,
   Player,
 };
