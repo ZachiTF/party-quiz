@@ -10,6 +10,9 @@ export interface PictureGuessConfig {
   mode: PictureMode;
   /** Startstufe 1 (extrem verpixelt/gezoomt) … 5 (am gröbsten erkennbar); im Quiz gibt es genau eine Hinweis-Stufe obendrauf */
   startLevel: number;
+  /** Zoom-Zielpunkt in % der Bildbreite/-höhe (nur mode 'zoom') */
+  zoomX: number;
+  zoomY: number;
   /** Auflösung, die nach der Antwort gezeigt wird (z. B. der Skin-Name) */
   reveal: string;
   /** Nur für alte Speicherstände (früher 1–10); wird in startLevel umgerechnet */
@@ -37,6 +40,8 @@ export const pictureGuess: Category<PictureGuessConfig> = {
     question: 'Was ist auf dem Bild zu sehen?',
     mode: 'pixelate',
     startLevel: 3,
+    zoomX: 50,
+    zoomY: 50,
     reveal: '',
     options: [],
     correctIndex: 0,

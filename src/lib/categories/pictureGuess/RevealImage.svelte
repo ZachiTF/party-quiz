@@ -6,7 +6,9 @@
     mode,
     level,
     hint = false,
-  }: { src: string; mode: PictureMode; level: number; hint?: boolean } = $props();
+    zoomX = 50,
+    zoomY = 50,
+  }: { src: string; mode: PictureMode; level: number; hint?: boolean; zoomX?: number; zoomY?: number } = $props();
 
   // 6 Stufen, alle bewusst tief im verpixelten/gezoomten Bereich mit feiner
   // Abstufung: Startstufe 1–5 (Index 0–4) + genau eine Hinweis-Stufe (+1).
@@ -17,6 +19,9 @@
   const idx = $derived(Math.min(5, Math.max(0, Math.round(level) - 1 + (hint ? 1 : 0))));
   const pixelFactor = $derived(PIXEL_LADDER[idx]);
   const zoomFactor = $derived(ZOOM_LADDER[idx]);
+  // Zielpunkt leicht von den Rändern wegklemmen, sonst zeigt der Ausschnitt ins Leere
+  const originX = $derived(Math.min(93, Math.max(7, zoomX ?? 50)));
+  const originY = $derived(Math.min(93, Math.max(7, zoomY ?? 50)));
 
   let img = $state<HTMLImageElement | null>(null);
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -67,7 +72,12 @@
   <canvas bind:this={canvas} class="reveal-img"></canvas>
 {:else if mode === 'zoom'}
   <div class="zoom-frame">
-    <img {src} alt="Rätselbild" style={`transform: scale(${zoomFactor})`} onerror={() => (loadError = true)} />
+    <img
+      {src}
+      alt="Rätselbild"
+      style={`transform: scale(${zoomFactor}); transform-origin: ${originX}% ${originY}%`}
+      onerror={() => (loadError = true)}
+    />
   </div>
 {:else}
   <img class="reveal-img" {src} alt="Rätselbild" onerror={() => (loadError = true)} />

@@ -6,22 +6,24 @@
 
   let { config, seed, maxAttempts, onResult }: PlayerProps<PictureGuessConfig> = $props();
 
-  const level = effectiveStartLevel(config);
+  const level = $derived(effectiveStartLevel(config));
   let hintUsed = $state(false);
   let wrongPicks = $state<number[]>([]);
   let done = $state(false);
 
-  const hasOptions = config.options.length > 0;
-  const order = hasOptions ? createRng(seed).shuffle(config.options.map((_, i) => i)) : [];
+  const hasOptions = $derived(config.options.length > 0);
+  const order = $derived(hasOptions ? createRng(seed).shuffle(config.options.map((_, i) => i)) : []);
 
   // Auflösung: richtige Antwort + optionaler Auflösungstext (z. B. Skin-Name)
-  const revealNote = config.reveal?.trim();
-  const solution = hasOptions
-    ? `Richtige Antwort: ${config.options[config.correctIndex]}${revealNote ? ` – ${revealNote}` : ''}`
-    : revealNote || undefined;
+  const revealNote = $derived(config.reveal?.trim());
+  const solution = $derived(
+    hasOptions
+      ? `Richtige Antwort: ${config.options[config.correctIndex]}${revealNote ? ` – ${revealNote}` : ''}`
+      : revealNote || undefined,
+  );
 
   // Nach der Antwort bekommt der Ergebnis-Screen das Original-Bild zur Auflösung
-  const revealImage = config.mode !== 'plain' ? config.imageUrl : undefined;
+  const revealImage = $derived(config.mode !== 'plain' ? config.imageUrl : undefined);
 
   function pick(i: number) {
     if (done || wrongPicks.includes(i)) return;
@@ -40,7 +42,7 @@
 
 <p class="question">{config.question}</p>
 
-<RevealImage src={config.imageUrl} mode={config.mode} {level} hint={hintUsed} />
+<RevealImage src={config.imageUrl} mode={config.mode} {level} hint={hintUsed} zoomX={config.zoomX} zoomY={config.zoomY} />
 
 {#if config.mode !== 'plain'}
   {#if !hintUsed}

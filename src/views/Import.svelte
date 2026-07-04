@@ -5,6 +5,8 @@
 
   let { q }: { q: string } = $props();
 
+  // q ändert sich nie während der Lebenszeit der Komponente (App remountet per {#key route})
+  // svelte-ignore state_referenced_locally
   const quiz = quizFromParam(q);
   if (quiz) saveQuiz(quiz);
 </script>

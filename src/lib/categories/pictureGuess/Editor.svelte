@@ -7,10 +7,17 @@
 
   let { config }: EditorProps<PictureGuessConfig> = $props();
 
-  // alte Speicherstände (strength 1-10 / ohne reveal) einmalig migrieren
+  // alte Speicherstände (strength 1-10 / ohne reveal/Zoom-Ziel) einmalig migrieren
+  // svelte-ignore state_referenced_locally
   config.startLevel = effectiveStartLevel(config);
+  // svelte-ignore state_referenced_locally
   config.reveal ??= '';
+  // svelte-ignore state_referenced_locally
+  config.zoomX ??= 50;
+  // svelte-ignore state_referenced_locally
+  config.zoomY ??= 50;
 
+  // svelte-ignore state_referenced_locally
   let useOptions = $state(config.options.length > 0);
   let previewHint = $state(false);
 
@@ -63,6 +70,13 @@
     if (config.correctIndex >= config.options.length) config.correctIndex = 0;
     else if (config.correctIndex > i) config.correctIndex--;
   }
+
+  function setZoomTarget(e: MouseEvent) {
+    const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    config.zoomX = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    config.zoomY = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+  }
 </script>
 
 <label class="field">
@@ -109,13 +123,30 @@
   </label>
 {/if}
 
+{#if config.imageUrl && config.mode === 'zoom'}
+  <div class="field">
+    <span>Zoom-Ziel: aufs Bild tippen <small>(aktuell {config.zoomX}&thinsp;% / {config.zoomY}&thinsp;%)</small></span>
+    <button type="button" class="target-wrap" onclick={setZoomTarget} title="Zoom-Ziel setzen">
+      <img src={config.imageUrl} alt="Zoom-Ziel wählen" />
+      <span class="crosshair" style={`left: ${config.zoomX}%; top: ${config.zoomY}%`}></span>
+    </button>
+  </div>
+{/if}
+
 {#if config.imageUrl}
   {#if config.mode === 'plain'}
     <img class="editor-preview" src={config.imageUrl} alt="Vorschau" loading="lazy" />
   {:else}
     <div class="field">
       <span>Vorschau – exakt so sieht es der Spieler; im Quiz gibt es genau eine Hinweis-Stufe</span>
-      <RevealImage src={config.imageUrl} mode={config.mode} level={config.startLevel} hint={previewHint} />
+      <RevealImage
+        src={config.imageUrl}
+        mode={config.mode}
+        level={config.startLevel}
+        hint={previewHint}
+        zoomX={config.zoomX}
+        zoomY={config.zoomY}
+      />
       <label class="field checkbox" style="margin-top: 0.4rem">
         <input type="checkbox" bind:checked={previewHint} />
         <span>Hinweis-Stufe (+1) anzeigen</span>
@@ -158,5 +189,30 @@
     max-width: 200px;
     border-radius: 8px;
     display: block;
+  }
+  .target-wrap {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: none;
+    cursor: crosshair;
+  }
+  .target-wrap img {
+    width: 100%;
+    display: block;
+  }
+  .crosshair {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    transform: translate(-50%, -50%);
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
   }
 </style>

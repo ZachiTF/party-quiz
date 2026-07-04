@@ -9,7 +9,7 @@
   let hint = $state('');
   let done = $state(false);
 
-  const unitSuffix = config.unit ? ` ${config.unit}` : '';
+  const unitSuffix = $derived(config.unit ? ` ${config.unit}` : '');
 
   function submit() {
     if (done) return;

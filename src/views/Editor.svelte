@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import {
     autoTiers,
     formatEuro,
@@ -17,15 +18,26 @@
 
   let { id }: { id: string } = $props();
 
+  // id ändert sich nie während der Lebenszeit der Komponente (App remountet per {#key route})
+  // svelte-ignore state_referenced_locally
   const loaded = getQuiz(id);
   let quiz = $state<Quiz | null>(loaded);
 
-  // Autosave (leicht entprellt), sobald sich irgendetwas am Quiz ändert
+  // Autosave (leicht entprellt), sobald sich irgendetwas am Quiz ändert;
+  // beim Verlassen wird ein noch ausstehender Save sofort geschrieben
+  let pendingSave: string | null = null;
   $effect(() => {
     if (!quiz) return;
     const snapshot = JSON.stringify(quiz);
-    const t = setTimeout(() => saveQuiz(JSON.parse(snapshot)), 300);
+    pendingSave = snapshot;
+    const t = setTimeout(() => {
+      saveQuiz(JSON.parse(snapshot));
+      pendingSave = null;
+    }, 300);
     return () => clearTimeout(t);
+  });
+  onDestroy(() => {
+    if (pendingSave) saveQuiz(JSON.parse(pendingSave));
   });
 
   let tierMin = $state(1);

@@ -6,7 +6,7 @@
 
   let { config, onResult }: PlayerProps<FreeTaskConfig> = $props();
 
-  const limit = config.timeLimit ?? 0;
+  const limit = $derived(config.timeLimit ?? 0);
 
   let elapsed = $state(0);
   let running = $state(false);

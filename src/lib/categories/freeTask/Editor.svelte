@@ -4,6 +4,7 @@
 
   let { config }: EditorProps<FreeTaskConfig> = $props();
 
+  // svelte-ignore state_referenced_locally
   config.timeLimit ??= 0;
 </script>
 

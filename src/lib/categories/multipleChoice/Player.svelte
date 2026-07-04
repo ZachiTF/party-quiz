@@ -6,7 +6,7 @@
   let { config, seed, maxAttempts, onResult }: PlayerProps<MultipleChoiceConfig> = $props();
 
   // Antwortreihenfolge deterministisch aus dem Seed mischen
-  const order = createRng(seed).shuffle(config.options.map((_, i) => i));
+  const order = $derived(createRng(seed).shuffle(config.options.map((_, i) => i)));
 
   let wrongPicks = $state<number[]>([]);
   let done = $state(false);

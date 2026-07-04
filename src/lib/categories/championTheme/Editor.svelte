@@ -8,6 +8,7 @@
 
   let { config }: EditorProps<ChampionThemeConfig> = $props();
 
+  // svelte-ignore state_referenced_locally
   let urlInput = $state(config.videoId);
   let urlError = $state(false);
   let championNames = $state<string[]>([]);

@@ -14,6 +14,8 @@
 
   let { id }: { id: string } = $props();
 
+  // id ändert sich nie während der Lebenszeit der Komponente (App remountet per {#key route})
+  // svelte-ignore state_referenced_locally
   const quiz = getQuiz(id);
 
   function initRun(): RunState | null {
