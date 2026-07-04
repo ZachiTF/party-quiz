@@ -16,10 +16,11 @@ export interface PlayerProps<C = any> {
   /** true in der Editor-Vorschau */
   preview?: boolean;
   /**
-   * Endgültiges Ergebnis; detail = Auflösung für den Ergebnis-Screen,
-   * image = Bild-URL, die dort in Originalqualität gezeigt wird
+   * Endgültiges Ergebnis. detail = Auflösung für den Ergebnis-Screen,
+   * image = Bild-URL in Originalqualität, penalty = Anteil (0–1), um den
+   * der Gewinn reduziert wird (z. B. durch bezahltes Rauszoomen).
    */
-  onResult: (correct: boolean, detail?: string, image?: string) => void;
+  onResult: (correct: boolean, extra?: { detail?: string; image?: string; penalty?: number }) => void;
 }
 
 export interface Category<C = any> {

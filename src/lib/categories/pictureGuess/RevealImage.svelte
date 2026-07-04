@@ -5,10 +5,10 @@
     src,
     mode,
     level,
-    hint = false,
+    extraSteps = 0,
     zoomX = 50,
     zoomY = 50,
-  }: { src: string; mode: PictureMode; level: number; hint?: boolean; zoomX?: number; zoomY?: number } = $props();
+  }: { src: string; mode: PictureMode; level: number; extraSteps?: number; zoomX?: number; zoomY?: number } = $props();
 
   // 6 Stufen, alle bewusst tief im verpixelten/gezoomten Bereich mit feiner
   // Abstufung: Startstufe 1–5 (Index 0–4) + genau eine Hinweis-Stufe (+1).
@@ -16,7 +16,7 @@
   const PIXEL_LADDER = [0.03, 0.04, 0.06, 0.09, 0.12, 0.150];
   const ZOOM_LADDER = [14, 11, 8.5, 6.5, 5, 3.8];
 
-  const idx = $derived(Math.min(5, Math.max(0, Math.round(level) - 1 + (hint ? 1 : 0))));
+  const idx = $derived(Math.min(5, Math.max(0, Math.round(level) - 1 + extraSteps)));
   const pixelFactor = $derived(PIXEL_LADDER[idx]);
   const zoomFactor = $derived(ZOOM_LADDER[idx]);
   // Zielpunkt leicht von den Rändern wegklemmen, sonst zeigt der Ausschnitt ins Leere

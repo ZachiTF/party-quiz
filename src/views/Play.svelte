@@ -70,9 +70,15 @@
     run.phase = 'question';
   }
 
-  function handleResult(correct: boolean, detail?: string, image?: string) {
+  function handleResult(correct: boolean, extra?: { detail?: string; image?: string; penalty?: number }) {
     if (!run || !quiz || !task) return;
-    const money = run.tier ? (correct ? quiz.tiers[run.tier].win : quiz.tiers[run.tier].base) : 0;
+    // penalty (z. B. bezahltes Rauszoomen) reduziert nur den Gewinn, nicht den Trostbetrag
+    const penalty = Math.min(1, Math.max(0, extra?.penalty ?? 0));
+    let money = 0;
+    if (run.tier) {
+      const tier = quiz.tiers[run.tier];
+      money = correct ? Math.round(tier.win * (1 - penalty) * 100) / 100 : tier.base;
+    }
     const item = run.chosenItem && correct ? run.chosenItem : null;
     run.results.push({
       taskId: task.id,
@@ -81,10 +87,20 @@
       money,
       item,
       chosenItem: run.chosenItem,
-      detail,
-      image: image ?? null,
+      detail: extra?.detail,
+      image: extra?.image ?? null,
     });
     run.phase = 'result';
+  }
+
+  // Quizmaster-Override: Betrag auf dem Ergebnis-Screen von Hand anpassen
+  let overrideOpen = $state(false);
+  let overrideValue = $state(0);
+
+  function applyOverride() {
+    if (!run || run.results.length === 0) return;
+    run.results[run.results.length - 1].money = Math.max(0, Number(overrideValue) || 0);
+    overrideOpen = false;
   }
 
   function next() {
@@ -93,6 +109,7 @@
     run.tier = null;
     run.chosenItem = null;
     run.active = { askFriend: false, twoTries: false };
+    overrideOpen = false;
     run.phase = run.index >= quiz.tasks.length ? 'done' : 'intro';
   }
 
@@ -201,11 +218,35 @@
         <p class="payout">🎁 {lastResult.item}</p>
       {:else if lastResult.chosenItem}
         <p class="payout muted">🎁 {lastResult.chosenItem} verpasst</p>
-      {:else if lastResult.money > 0}
-        <p class="payout">+{formatEuro(lastResult.money)}</p>
-      {:else}
-        <p class="payout">{formatEuro(0)}</p>
       {/if}
+      {#if lastResult.money > 0 || !lastResult.chosenItem}
+        <p class="payout">{lastResult.money > 0 ? `+${formatEuro(lastResult.money)}` : formatEuro(0)}</p>
+      {/if}
+
+      {#if overrideOpen}
+        <div class="btn-row">
+          <input
+            class="number-input"
+            type="number"
+            step="0.1"
+            min="0"
+            bind:value={overrideValue}
+            onkeydown={(e) => e.key === 'Enter' && applyOverride()}
+          />
+          <button class="btn primary" onclick={applyOverride}>€ übernehmen</button>
+        </div>
+      {:else}
+        <button
+          class="btn small ghost"
+          onclick={() => {
+            overrideValue = lastResult.money;
+            overrideOpen = true;
+          }}
+        >
+          ✏️ Quizmaster: Betrag anpassen
+        </button>
+      {/if}
+
       <button class="btn primary full" onclick={next}>
         {run.index + 1 >= quiz.tasks.length ? '🏁 Zum Ergebnis' : 'Weiter →'}
       </button>
@@ -229,7 +270,8 @@
               <td>{taskIcon(r.taskId)} Aufgabe {i + 1}{r.tier ? ` (${TIER_LABELS[r.tier]})` : ''}</td>
               <td>{r.correct ? '✅' : '❌'}</td>
               <td>
-                {#if r.item}🎁 {r.item}{:else if r.chosenItem}🎁 {r.chosenItem} verpasst{:else}{formatEuro(r.money)}{/if}
+                {#if r.item}🎁 {r.item}{:else if r.chosenItem}🎁 {r.chosenItem} verpasst{/if}
+                {#if r.money > 0 || (!r.item && !r.chosenItem)}{formatEuro(r.money)}{/if}
               </td>
             </tr>
           {/each}

@@ -233,8 +233,8 @@
                 seed={`${quiz.seed}:${task.id}`}
                 maxAttempts={2}
                 preview={true}
-                onResult={(correct, detail) =>
-                  (previewResult[task.id] = `${correct ? '✅ richtig' : '❌ falsch'}${detail ? ` – ${detail}` : ''}`)}
+                onResult={(correct, extra) =>
+                  (previewResult[task.id] = `${correct ? '✅ richtig' : '❌ falsch'}${extra?.detail ? ` – ${extra.detail}` : ''}`)}
               />
             {/key}
             {#if previewResult[task.id]}

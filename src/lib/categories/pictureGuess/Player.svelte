@@ -7,9 +7,14 @@
   let { config, seed, maxAttempts, onResult }: PlayerProps<PictureGuessConfig> = $props();
 
   const level = $derived(effectiveStartLevel(config));
-  let hintUsed = $state(false);
+  let hintUsed = $state(false); // Verpixelung: 1 Gratis-Hinweis
+  let zoomOuts = $state(0); // Zoom: Rauszoomen kostet je 10 % Gewinn
   let wrongPicks = $state<number[]>([]);
   let done = $state(false);
+
+  const extraSteps = $derived(config.mode === 'zoom' ? zoomOuts : hintUsed ? 1 : 0);
+  const canZoomOut = $derived(level - 1 + zoomOuts < 5);
+  const penalty = $derived(config.mode === 'zoom' ? zoomOuts * 0.1 : 0);
 
   const hasOptions = $derived(config.options.length > 0);
   const order = $derived(hasOptions ? createRng(seed).shuffle(config.options.map((_, i) => i)) : []);
@@ -25,30 +30,38 @@
   // Nach der Antwort bekommt der Ergebnis-Screen das Original-Bild zur Auflösung
   const revealImage = $derived(config.mode !== 'plain' ? config.imageUrl : undefined);
 
+  function finish(correct: boolean) {
+    done = true;
+    onResult(correct, { detail: solution, image: revealImage, penalty });
+  }
+
   function pick(i: number) {
     if (done || wrongPicks.includes(i)) return;
     if (i === config.correctIndex) {
-      done = true;
-      onResult(true, solution, revealImage);
+      finish(true);
     } else {
       wrongPicks.push(i);
-      if (wrongPicks.length >= maxAttempts) {
-        done = true;
-        onResult(false, solution, revealImage);
-      }
+      if (wrongPicks.length >= maxAttempts) finish(false);
     }
   }
 </script>
 
 <p class="question">{config.question}</p>
 
-<RevealImage src={config.imageUrl} mode={config.mode} {level} hint={hintUsed} zoomX={config.zoomX} zoomY={config.zoomY} />
+<RevealImage src={config.imageUrl} mode={config.mode} {level} {extraSteps} zoomX={config.zoomX} zoomY={config.zoomY} />
 
-{#if config.mode !== 'plain'}
+{#if config.mode === 'pixelate'}
   {#if !hintUsed}
     <button class="btn full" onclick={() => (hintUsed = true)}>🔍 Hinweis nehmen: eine Stufe deutlicher (1×)</button>
   {:else}
     <p class="hint">🔍 Hinweis-Stufe aktiv – deutlicher wird es nicht.</p>
+  {/if}
+{:else if config.mode === 'zoom'}
+  {#if canZoomOut && !done}
+    <button class="btn full" onclick={() => zoomOuts++}>🔍 Rauszoomen (−10&thinsp;% Gewinn)</button>
+  {/if}
+  {#if zoomOuts > 0}
+    <p class="hint">{zoomOuts}× rausgezoomt – Gewinn um {zoomOuts * 10}&thinsp;% reduziert</p>
   {/if}
 {/if}
 
@@ -71,7 +84,7 @@
 {:else}
   <p class="judge-hint">Antwort laut sagen – der Quizmaster entscheidet:</p>
   <div class="btn-row">
-    <button class="btn correct" onclick={() => onResult(true, solution, revealImage)}>✅ Richtig</button>
-    <button class="btn wrong" onclick={() => onResult(false, solution, revealImage)}>❌ Falsch</button>
+    <button class="btn correct" onclick={() => finish(true)}>✅ Richtig</button>
+    <button class="btn wrong" onclick={() => finish(false)}>❌ Falsch</button>
   </div>
 {/if}

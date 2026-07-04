@@ -14,13 +14,13 @@
     if (!selected || done) return;
     if (selected === config.answer) {
       done = true;
-      onResult(true, `Es war ${config.answer}!`);
+      onResult(true, { detail: `Es war ${config.answer}!` });
     } else {
       wrongPicks.push(selected);
       selected = null;
       if (wrongPicks.length >= maxAttempts) {
         done = true;
-        onResult(false, `Es war ${config.answer}.`);
+        onResult(false, { detail: `Es war ${config.answer}.` });
       }
     }
   }

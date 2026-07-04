@@ -25,10 +25,10 @@
     const detail = `Richtige Antwort: ${config.answer.toLocaleString('de-DE')}${unitSuffix}${tolNote}`;
     if (delta <= allowedDelta(config)) {
       done = true;
-      onResult(true, detail);
+      onResult(true, { detail });
     } else if (attempts >= maxAttempts) {
       done = true;
-      onResult(false, detail);
+      onResult(false, { detail });
     } else {
       hint = guess > config.answer ? '📉 Zu hoch! Noch ein Versuch:' : '📈 Zu tief! Noch ein Versuch:';
       input = '';

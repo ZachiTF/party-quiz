@@ -143,13 +143,13 @@
         src={config.imageUrl}
         mode={config.mode}
         level={config.startLevel}
-        hint={previewHint}
+        extraSteps={previewHint ? 1 : 0}
         zoomX={config.zoomX}
         zoomY={config.zoomY}
       />
       <label class="field checkbox" style="margin-top: 0.4rem">
         <input type="checkbox" bind:checked={previewHint} />
-        <span>Hinweis-Stufe (+1) anzeigen</span>
+        <span>{config.mode === 'zoom' ? 'Eine Rauszoom-Stufe (+1) anzeigen' : 'Hinweis-Stufe (+1) anzeigen'}</span>
       </label>
     </div>
   {/if}

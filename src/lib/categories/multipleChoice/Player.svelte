@@ -15,12 +15,12 @@
     if (done || wrongPicks.includes(i)) return;
     if (i === config.correctIndex) {
       done = true;
-      onResult(true, `Richtige Antwort: ${config.options[config.correctIndex]}`);
+      onResult(true, { detail: `Richtige Antwort: ${config.options[config.correctIndex]}` });
     } else {
       wrongPicks.push(i);
       if (wrongPicks.length >= maxAttempts) {
         done = true;
-        onResult(false, `Richtig gewesen wäre: ${config.options[config.correctIndex]}`);
+        onResult(false, { detail: `Richtig gewesen wäre: ${config.options[config.correctIndex]}` });
       }
     }
   }
