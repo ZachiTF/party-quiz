@@ -1,0 +1,358 @@
+:root {
+  --bg: #14162b;
+  --card: #1f2340;
+  --card-2: #2a2f52;
+  --border: #3a4070;
+  --text: #f2f3fa;
+  --muted: #a8adcc;
+  --accent: #ffcf5c;
+  --accent-text: #2b2200;
+  --correct: #3ecf7a;
+  --wrong: #ff6470;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem 1rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  margin: 0.5rem 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* ---------- Formulare ---------- */
+input[type='text'],
+input[type='number'],
+input[type='url'],
+textarea,
+select,
+.number-input {
+  width: 100%;
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field {
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.field > span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.field.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field.checkbox span {
+  margin: 0;
+}
+
+.field.checkbox input {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+}
+
+.option-row input[type='radio'] {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex-shrink: 0;
+  accent-color: var(--correct);
+}
+
+/* ---------- Buttons ---------- */
+button {
+  font-family: inherit;
+}
+
+.btn {
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  min-height: 48px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.btn.correct {
+  background: var(--correct);
+  border-color: var(--correct);
+  color: #00250f;
+  font-weight: 700;
+}
+
+.btn.wrong {
+  background: var(--wrong);
+  border-color: var(--wrong);
+  color: #33000a;
+  font-weight: 700;
+}
+
+.btn.small {
+  min-height: 36px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.9rem;
+  border-radius: 9px;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.btn.full {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.btn-row {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+}
+
+.btn-row .btn {
+  flex: 1;
+}
+
+.btn-row .number-input {
+  flex: 2;
+  width: auto;
+}
+
+/* ---------- Karten ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 0.9rem 0;
+}
+
+/* ---------- Spiel-Elemente ---------- */
+.question {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0.75rem 0;
+}
+
+.answers {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+}
+
+.btn.answer {
+  text-align: left;
+  font-size: 1.05rem;
+}
+
+.btn.answer.wrong-pick,
+.btn.wrong-pick {
+  background: color-mix(in srgb, var(--wrong) 30%, var(--card-2));
+  border-color: var(--wrong);
+  text-decoration: line-through;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.4rem 0;
+}
+
+.judge-hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 1rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.25rem;
+  margin: -1rem -0.25rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.statusbar .money {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tier-btns {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.btn.tier {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 1.05rem;
+}
+
+.btn.tier .tier-values {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.result-banner {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.result-banner .big {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0.25rem 0;
+}
+
+.result-banner .payout {
+  font-size: 1.5rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ---------- Diverses ---------- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.6rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.badge.item {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+table.summary {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+table.summary td {
+  padding: 0.4rem 0.3rem;
+  border-bottom: 1px solid var(--border);
+}
+
+table.summary td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
