@@ -202,7 +202,13 @@
 
     <div class="card">
       {#key run.index}
-        <cat.Player config={task.config} seed={`${quiz.seed}:${task.id}`} {maxAttempts} onResult={handleResult} />
+        <cat.Player
+          config={task.config}
+          seed={`${quiz.seed}:${task.id}`}
+          {maxAttempts}
+          stakeMoney={run.tier ? quiz.tiers[run.tier].win : undefined}
+          onResult={handleResult}
+        />
       {/key}
     </div>
   {:else if run.phase === 'result' && lastResult}

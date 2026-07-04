@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { PlayerProps } from '../types';
   import { effectiveStartLevel, type PictureGuessConfig } from './index';
+  import { formatEuro } from '../../model';
   import { createRng } from '../../rng';
   import RevealImage from './RevealImage.svelte';
 
-  let { config, seed, maxAttempts, onResult }: PlayerProps<PictureGuessConfig> = $props();
+  let { config, seed, maxAttempts, stakeMoney, onResult }: PlayerProps<PictureGuessConfig> = $props();
 
   const level = $derived(effectiveStartLevel(config));
   let hintUsed = $state(false); // Verpixelung: 1 Gratis-Hinweis
@@ -15,6 +16,8 @@
   const extraSteps = $derived(config.mode === 'zoom' ? zoomOuts : hintUsed ? 1 : 0);
   const canZoomOut = $derived(level - 1 + zoomOuts < 5);
   const penalty = $derived(config.mode === 'zoom' ? zoomOuts * 0.1 : 0);
+  // echte Kosten in €, wenn der Einsatz bekannt ist (sonst nur Prozent anzeigen)
+  const stepCost = $derived(stakeMoney ? stakeMoney * 0.1 : null);
 
   const hasOptions = $derived(config.options.length > 0);
   const order = $derived(hasOptions ? createRng(seed).shuffle(config.options.map((_, i) => i)) : []);
@@ -58,10 +61,16 @@
   {/if}
 {:else if config.mode === 'zoom'}
   {#if canZoomOut && !done}
-    <button class="btn full" onclick={() => zoomOuts++}>🔍 Rauszoomen (−10&thinsp;% Gewinn)</button>
+    <button class="btn full" onclick={() => zoomOuts++}>
+      🔍 Rauszoomen ({stepCost ? `−${formatEuro(stepCost)}` : '−10 % Gewinn'})
+    </button>
   {/if}
   {#if zoomOuts > 0}
-    <p class="hint">{zoomOuts}× rausgezoomt – Gewinn um {zoomOuts * 10}&thinsp;% reduziert</p>
+    <p class="hint">
+      {zoomOuts}× rausgezoomt – Gewinn um
+      {stepCost ? `${formatEuro(stepCost * zoomOuts)} (−${zoomOuts * 10} %)` : `${zoomOuts * 10} %`}
+      reduziert
+    </p>
   {/if}
 {/if}
 

@@ -13,6 +13,8 @@ export interface PlayerProps<C = any> {
   seed: string;
   /** 2, wenn der Zwei-Versuche-Joker aktiv ist */
   maxAttempts: number;
+  /** Möglicher Gewinn in € für diesen Task (undefined bei Sachpreis-Einsatz oder in der Vorschau) */
+  stakeMoney?: number;
   /** true in der Editor-Vorschau */
   preview?: boolean;
   /**
