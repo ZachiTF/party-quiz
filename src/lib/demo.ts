@@ -28,6 +28,7 @@ export function createDemoQuiz(): Quiz {
       imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/960px-Colosseo_2020.jpg',
       question: 'Welches Bauwerk ist hier zu sehen?',
       mode: 'pixelate',
+      strength: 5,
       options: ['Kolosseum', 'Circus Maximus', 'Pantheon', 'Arena von Verona'],
       correctIndex: 0,
     };

@@ -10,6 +10,8 @@ export interface TaskResult {
   money: number;
   item: string | null;
   detail?: string;
+  /** Original-Bild zur Auflösung (z. B. unverpixelt bei Bilderraten) */
+  image?: string | null;
 }
 
 export type PlayPhase = 'intro' | 'question' | 'result' | 'done';

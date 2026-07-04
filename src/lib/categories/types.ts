@@ -15,8 +15,11 @@ export interface PlayerProps<C = any> {
   maxAttempts: number;
   /** true in der Editor-Vorschau */
   preview?: boolean;
-  /** Endgültiges Ergebnis; detail = Auflösung für den Ergebnis-Screen */
-  onResult: (correct: boolean, detail?: string) => void;
+  /**
+   * Endgültiges Ergebnis; detail = Auflösung für den Ergebnis-Screen,
+   * image = Bild-URL, die dort in Originalqualität gezeigt wird
+   */
+  onResult: (correct: boolean, detail?: string, image?: string) => void;
 }
 
 export interface Category<C = any> {

@@ -58,7 +58,7 @@
     run.active[joker] = true;
   }
 
-  function handleResult(correct: boolean, detail?: string) {
+  function handleResult(correct: boolean, detail?: string, image?: string) {
     if (!run || !quiz || !task) return;
     const money =
       task.reward.kind === 'money' && run.tier
@@ -67,7 +67,7 @@
           : quiz.tiers[run.tier].base
         : 0;
     const item = task.reward.kind === 'item' && correct ? task.reward.label : null;
-    run.results.push({ taskId: task.id, tier: run.tier, correct, money, item, detail });
+    run.results.push({ taskId: task.id, tier: run.tier, correct, money, item, detail, image: image ?? null });
     run.phase = 'result';
   }
 
@@ -169,6 +169,9 @@
       <div class="big">{lastResult.correct ? '🎉 Richtig!' : '😬 Leider falsch'}</div>
       {#if lastResult.detail}
         <p class="muted">{lastResult.detail}</p>
+      {/if}
+      {#if lastResult.image}
+        <img class="result-img" src={lastResult.image} alt="Auflösung" />
       {/if}
       {#if lastResult.item}
         <p class="payout">🎁 {lastResult.item}</p>

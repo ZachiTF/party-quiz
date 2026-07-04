@@ -1,11 +1,22 @@
 <script lang="ts">
   import type { PictureMode } from './index';
 
-  let { src, mode, step, maxSteps }: { src: string; mode: PictureMode; step: number; maxSteps: number } = $props();
+  let {
+    src,
+    mode,
+    step,
+    maxSteps,
+    strength = 5,
+  }: { src: string; mode: PictureMode; step: number; maxSteps: number; strength?: number } = $props();
 
-  // Verpixelungs-Faktor bzw. Zoom-Stufe pro Schritt (letzter Schritt = klares Bild)
-  const pixelFactor = $derived(mode === 'pixelate' ? [0.015, 0.03, 0.06, 0.13, 1][Math.min(step, 4)] : 1);
-  const zoomFactor = $derived(mode === 'zoom' ? [7, 5, 3.5, 2, 1][Math.min(step, 4)] : 1);
+  // Schwierigkeit 1..10 -> Start-Verpixelung bzw. Start-Zoom; die Schritte
+  // laufen geometrisch bis zum klaren Bild (letzter Schritt = Original)
+  const s = $derived(Math.min(10, Math.max(1, strength ?? 5)));
+  const startPixel = $derived(0.06 * Math.pow(0.008 / 0.06, (s - 1) / 9));
+  const startZoom = $derived(3 * Math.pow(12 / 3, (s - 1) / 9));
+  const progress = $derived(Math.min(step, maxSteps) / maxSteps);
+  const pixelFactor = $derived(mode === 'pixelate' ? Math.pow(startPixel, 1 - progress) : 1);
+  const zoomFactor = $derived(mode === 'zoom' ? Math.pow(startZoom, 1 - progress) : 1);
 
   let img = $state<HTMLImageElement | null>(null);
   let canvas = $state<HTMLCanvasElement | null>(null);

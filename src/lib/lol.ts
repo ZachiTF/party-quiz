@@ -1,11 +1,24 @@
-/** Champion-Namen live von Riots Data Dragon (mit localStorage-Cache + Fallback). */
+/** Champion-Daten live von Riots Data Dragon (mit localStorage-Cache + Fallback). */
 
-const CACHE_KEY = 'partyquiz.champions';
+export interface Champion {
+  /** ddragon-Id, z. B. "MonkeyKing" für Wukong – wird für Bild-URLs gebraucht */
+  id: string;
+  /** Anzeigename, z. B. "Wukong" */
+  name: string;
+}
+
+export interface ChampionSkin {
+  num: number;
+  name: string;
+}
+
+const CACHE_KEY = 'partyquiz.champions.v2';
+const DDRAGON = 'https://ddragon.leagueoflegends.com';
 
 interface Cache {
   version: string;
   fetchedAt: number;
-  names: string[];
+  champs: Champion[];
 }
 
 function readCache(): Cache | null {
@@ -16,41 +29,83 @@ function readCache(): Cache | null {
   }
 }
 
-let inflight: Promise<string[]> | null = null;
+async function fetchLatestVersion(): Promise<string> {
+  const versions: string[] = await (await fetch(`${DDRAGON}/api/versions.json`)).json();
+  return versions[0];
+}
 
-export function loadChampionNames(): Promise<string[]> {
+let inflight: Promise<Champion[]> | null = null;
+
+export function loadChampions(): Promise<Champion[]> {
   if (!inflight) inflight = doLoad();
   return inflight;
 }
 
-async function doLoad(): Promise<string[]> {
+export async function loadChampionNames(): Promise<string[]> {
+  return (await loadChampions()).map((c) => c.name);
+}
+
+async function doLoad(): Promise<Champion[]> {
   const cache = readCache();
   // Cache max. 1 Tag alt -> kein Netz-Roundtrip bei jedem Task
-  if (cache && Date.now() - cache.fetchedAt < 24 * 60 * 60 * 1000) return cache.names;
+  if (cache && Date.now() - cache.fetchedAt < 24 * 60 * 60 * 1000) return cache.champs;
   try {
-    const versions: string[] = await (
-      await fetch('https://ddragon.leagueoflegends.com/api/versions.json')
-    ).json();
-    const version = versions[0];
+    const version = await fetchLatestVersion();
     if (cache?.version === version) {
       localStorage.setItem(CACHE_KEY, JSON.stringify({ ...cache, fetchedAt: Date.now() }));
-      return cache.names;
+      return cache.champs;
     }
-    const data = await (
-      await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/de_DE/champion.json`)
-    ).json();
-    const names = Object.values(data.data as Record<string, { name: string }>)
-      .map((c) => c.name)
-      .sort((a, b) => a.localeCompare(b, 'de'));
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ version, fetchedAt: Date.now(), names } satisfies Cache));
-    return names;
+    const data = await (await fetch(`${DDRAGON}/cdn/${version}/data/de_DE/champion.json`)).json();
+    const champs = Object.values(data.data as Record<string, { id: string; name: string }>)
+      .map((c) => ({ id: c.id, name: c.name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ version, fetchedAt: Date.now(), champs } satisfies Cache));
+    return champs;
   } catch {
-    return cache?.names ?? FALLBACK_CHAMPIONS;
+    return cache?.champs ?? FALLBACK_CHAMPIONS;
   }
 }
 
+/** Skins eines Champions (num 0 = Standard-Splash). */
+export async function loadChampionSkins(championId: string): Promise<ChampionSkin[]> {
+  const cache = readCache();
+  const version = cache?.version ?? (await fetchLatestVersion());
+  const data = await (
+    await fetch(`${DDRAGON}/cdn/${version}/data/de_DE/champion/${championId}.json`)
+  ).json();
+  const champ = data.data[championId] as { name: string; skins: { num: number; name: string }[] };
+  return champ.skins.map((s) => ({
+    num: s.num,
+    name: s.name === 'default' ? `${champ.name} (Standard)` : s.name,
+  }));
+}
+
+/** Splash-Art-URL – versionsunabhängig und stabil. */
+export function splashUrl(championId: string, skinNum: number): string {
+  return `${DDRAGON}/cdn/img/champion/splash/${championId}_${skinNum}.jpg`;
+}
+
+/** ddragon-Ids, die sich nicht mechanisch aus dem Namen ableiten lassen. */
+const ID_OVERRIDES: Record<string, string> = {
+  Wukong: 'MonkeyKing',
+  'Nunu & Willump': 'Nunu',
+  'Renata Glasc': 'Renata',
+  "Bel'Veth": 'Belveth',
+  "Cho'Gath": 'Chogath',
+  "Kai'Sa": 'Kaisa',
+  "Kha'Zix": 'Khazix',
+  "Vel'Koz": 'Velkoz',
+  LeBlanc: 'Leblanc',
+  'Dr. Mundo': 'DrMundo',
+  'Jarvan IV.': 'JarvanIV',
+};
+
+function toChampion(name: string): Champion {
+  return { id: ID_OVERRIDES[name] ?? name.replace(/[^A-Za-z]/g, ''), name };
+}
+
 /** Wird nur benutzt, wenn Data Dragon nicht erreichbar ist. */
-export const FALLBACK_CHAMPIONS: string[] = [
+export const FALLBACK_CHAMPIONS: Champion[] = [
   'Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Ambessa', 'Amumu', 'Anivia', 'Annie',
   'Aphelios', 'Ashe', 'Aurelion Sol', 'Aurora', 'Azir', 'Bard', "Bel'Veth", 'Blitzcrank',
   'Brand', 'Braum', 'Briar', 'Caitlyn', 'Camille', 'Cassiopeia', "Cho'Gath", 'Corki',
@@ -72,4 +127,4 @@ export const FALLBACK_CHAMPIONS: string[] = [
   'Vex', 'Vi', 'Viego', 'Viktor', 'Vladimir', 'Volibear', 'Warwick', 'Wukong', 'Xayah',
   'Xerath', 'Xin Zhao', 'Yasuo', 'Yone', 'Yorick', 'Yuumi', 'Zac', 'Zed', 'Zeri',
   'Ziggs', 'Zilean', 'Zoe', 'Zyra',
-];
+].map(toChampion);
