@@ -34,6 +34,7 @@
   const revealImage = $derived(config.mode !== 'plain' ? config.imageUrl : undefined);
 
   function finish(correct: boolean) {
+    if (done) return;
     done = true;
     onResult(correct, { detail: solution, image: revealImage, penalty });
   }

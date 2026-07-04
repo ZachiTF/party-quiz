@@ -51,8 +51,20 @@ export function newRun(quiz: Quiz): RunState {
 export function loadQuizzes(): Quiz[] {
   try {
     const quizzes: Quiz[] = JSON.parse(localStorage.getItem(QUIZZES_KEY) ?? '[]');
-    // ältere Speicherstände kennen den Sachpreis-Pool noch nicht
-    for (const q of quizzes) q.items ??= [];
+    for (const q of quizzes) {
+      // older saves don't know the prize pool yet
+      q.items ??= [];
+      // cleared number inputs in the editor leave null behind; a null amount
+      // would crash formatEuro() on the play screen
+      for (const tier of Object.values(q.tiers ?? {})) {
+        tier.base = Number(tier.base) || 0;
+        tier.win = Number(tier.win) || 0;
+      }
+      q.jokers = {
+        askFriend: Number(q.jokers?.askFriend) || 0,
+        twoTries: Number(q.jokers?.twoTries) || 0,
+      };
+    }
     return quizzes;
   } catch {
     return [];

@@ -54,15 +54,16 @@
   function addTask(categoryId: string) {
     if (!quiz) return;
     const cat = getCategory(categoryId)!;
+    // seed with the random task id: seeding with tasks.length would reuse a
+    // seed after delete-then-add and generate the same question twice
+    const id = uid();
     const task: Task = {
-      id: uid(),
+      id,
       categoryId,
-      config: cat.generate
-        ? cat.generate(createRng(`${quiz.seed}:${quiz.tasks.length}`))
-        : cat.createDefault(),
+      config: cat.generate ? cat.generate(createRng(`${quiz.seed}:${id}`)) : cat.createDefault(),
     };
     quiz.tasks.push(task);
-    expanded[task.id] = true;
+    expanded[id] = true;
   }
 
   function move(i: number, delta: number) {

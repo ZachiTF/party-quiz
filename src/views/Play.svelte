@@ -71,7 +71,8 @@
   }
 
   function handleResult(correct: boolean, extra?: { detail?: string; image?: string; penalty?: number }) {
-    if (!run || !quiz || !task) return;
+    // phase guard: a double-tap on a judge button must not record two results
+    if (!run || !quiz || !task || run.phase !== 'question') return;
     // penalty (z. B. bezahltes Rauszoomen) reduziert nur den Gewinn, nicht den Trostbetrag
     const penalty = Math.min(1, Math.max(0, extra?.penalty ?? 0));
     let money = 0;
@@ -130,6 +131,15 @@
   <div class="card">
     <h2>😕 Quiz nicht gefunden</h2>
     <button class="btn" onclick={() => navigate('/')}>Zur Übersicht</button>
+  </div>
+{:else if quiz.tasks.length === 0}
+  <!-- reachable via direct URL; the Home button is disabled for empty quizzes -->
+  <div class="card">
+    <h2>🤷 Dieses Quiz hat noch keine Aufgaben</h2>
+    <div class="row">
+      <button class="btn primary" onclick={() => navigate(`/edit/${quiz!.id}`)}>✏️ Bearbeiten</button>
+      <button class="btn" onclick={() => navigate('/')}>Zur Übersicht</button>
+    </div>
   </div>
 {:else}
   <div class="statusbar">

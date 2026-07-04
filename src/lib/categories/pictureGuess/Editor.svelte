@@ -67,7 +67,8 @@
 
   function removeOption(i: number) {
     config.options.splice(i, 1);
-    if (config.correctIndex >= config.options.length) config.correctIndex = 0;
+    // removing the marked-correct option must not silently mark another one
+    if (config.correctIndex === i || config.correctIndex >= config.options.length) config.correctIndex = 0;
     else if (config.correctIndex > i) config.correctIndex--;
   }
 

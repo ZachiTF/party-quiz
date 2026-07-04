@@ -46,6 +46,12 @@ Viewport 390×844 (Smartphone). Bewährter Ablauf:
 5. Endscreen-Summe gegen `quiz.tiers` nachrechnen
 
 Gotchas:
+- `formatEuro()` nutzt ein non-breaking space („0,40 €") — `getByRole`-Namen
+  normalisieren das, `getByText`-Regexes nicht: dort `0,40\s€` schreiben
+- `.option-row` gibt es im Editor mehrfach (Sachpreis-Pool UND Antwort-Listen) —
+  Locators immer auf die Task-Karte scopen
+- Quiz-Patches in localStorage nur machen, wenn der Editor NICHT offen ist
+  (sein Autosave/Unmount-Flush überschreibt sie sonst)
 - Bilder (pictureGuess, Wikimedia) laden asynchron — vor Canvas-Screenshots
   ~2–4 s warten, sonst sieht der Canvas leer aus, obwohl alles funktioniert
 - `page.on('dialog', d => d.accept())` für confirm()-Dialoge (Löschen/Neustart)
