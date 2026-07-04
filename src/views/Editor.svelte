@@ -29,7 +29,7 @@
   });
 
   let tierMin = $state(1);
-  let tierMax = $state(10);
+  let tierMax = $state(4);
   let expanded = $state<Record<string, boolean>>({});
   let previewing = $state<Record<string, number>>({});
   let previewResult = $state<Record<string, string>>({});
@@ -45,7 +45,6 @@
     const task: Task = {
       id: uid(),
       categoryId,
-      reward: { kind: 'money' },
       config: cat.generate
         ? cat.generate(createRng(`${quiz.seed}:${quiz.tasks.length}`))
         : cat.createDefault(),
@@ -85,10 +84,6 @@
       if (cat?.generate) task.config = cat.generate(createRng(`${quiz.seed}:${i}`));
     }
     previewResult = {};
-  }
-
-  function setRewardKind(task: Task, kind: 'money' | 'item') {
-    task.reward = kind === 'money' ? { kind: 'money' } : { kind: 'item', label: '' };
   }
 
   function togglePreview(task: Task) {
@@ -177,6 +172,19 @@
         </label>
       </div>
     {/each}
+
+    <h3>🎁 Sachpreis-Pool</h3>
+    <p class="muted">
+      Sachpreise stehen bei jeder Aufgabe neben den Geld-Stufen zur Wahl – aber jeder nur einmal pro Durchlauf, und
+      nur bei richtiger Antwort gibt es ihn wirklich.
+    </p>
+    {#each quiz.items as _, i}
+      <div class="option-row">
+        <input type="text" bind:value={quiz.items[i]} placeholder="z. B. 1 Tüte Gummibärchen" />
+        <button class="btn small ghost" onclick={() => quiz!.items.splice(i, 1)} title="Preis entfernen">✕</button>
+      </div>
+    {/each}
+    <button class="btn small" onclick={() => quiz!.items.push('')}>+ Sachpreis</button>
   </div>
 
   <h3>📋 Aufgaben ({quiz.tasks.length})</h3>
@@ -190,11 +198,6 @@
             {expanded[task.id] ? '▾' : '▸'}
           </button>
           <strong>{i + 1}. {cat.icon} {cat.name}</strong>
-          {#if task.reward.kind === 'item'}
-            <span class="badge item">🎁 {task.reward.label || 'Sachpreis'}</span>
-          {:else}
-            <span class="badge">💶 Geld-Stufen</span>
-          {/if}
           <div class="spacer"></div>
           <button class="btn small" disabled={i === 0} onclick={() => move(i, -1)} title="Nach oben">↑</button>
           <button class="btn small" disabled={i === quiz.tasks.length - 1} onclick={() => move(i, 1)} title="Nach unten">↓</button>
@@ -206,32 +209,6 @@
         </div>
 
         {#if expanded[task.id]}
-          <div class="field">
-            <span>Belohnung</span>
-            <div class="row">
-              <label class="field checkbox" style="margin:0">
-                <input
-                  type="radio"
-                  name={`reward-${task.id}`}
-                  checked={task.reward.kind === 'money'}
-                  onchange={() => setRewardKind(task, 'money')}
-                />
-                <span>💶 Geld-Stufen</span>
-              </label>
-              <label class="field checkbox" style="margin:0">
-                <input
-                  type="radio"
-                  name={`reward-${task.id}`}
-                  checked={task.reward.kind === 'item'}
-                  onchange={() => setRewardKind(task, 'item')}
-                />
-                <span>🎁 Sachpreis</span>
-              </label>
-              {#if task.reward.kind === 'item'}
-                <input type="text" style="flex:1" bind:value={task.reward.label} placeholder="z. B. 1 Tüte Gummibärchen" />
-              {/if}
-            </div>
-          </div>
           <cat.Editor config={task.config} />
         {/if}
 

@@ -8,12 +8,9 @@ export interface TierValue {
   win: number;
 }
 
-export type Reward = { kind: 'money' } | { kind: 'item'; label: string };
-
 export interface Task {
   id: string;
   categoryId: string;
-  reward: Reward;
   config: unknown;
 }
 
@@ -23,6 +20,8 @@ export interface Quiz {
   seed: string;
   tiers: Record<TierId, TierValue>;
   jokers: Record<JokerId, number>;
+  /** Sachpreis-Pool: jeder Eintrag kann im Quiz genau einmal statt der Geld-Stufen gewählt werden */
+  items: string[];
   tasks: Task[];
 }
 
@@ -67,8 +66,9 @@ export function createQuiz(): Quiz {
     id: uid(),
     name: 'Neues Quiz',
     seed: todaySeed(),
-    tiers: autoTiers(1, 10),
+    tiers: autoTiers(1, 4),
     jokers: { askFriend: 1, twoTries: 1 },
+    items: [],
     tasks: [],
   };
 }

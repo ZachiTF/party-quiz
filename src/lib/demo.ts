@@ -9,15 +9,15 @@ export function createDemoQuiz(): Quiz {
     id: uid(),
     name: 'Beispiel-Quiz',
     seed,
-    tiers: autoTiers(1, 10),
+    tiers: autoTiers(1, 4),
     jokers: { askFriend: 1, twoTries: 1 },
+    items: ['1 Tüte Gummibärchen', '1 Schokoriegel'],
     tasks: [],
   };
   for (const [i, cat] of CATEGORIES.entries()) {
     quiz.tasks.push({
       id: uid(),
       categoryId: cat.id,
-      reward: { kind: 'money' },
       config: cat.generate ? cat.generate(createRng(`${seed}:${i}`)) : cat.createDefault(),
     });
   }
@@ -32,7 +32,6 @@ export function createDemoQuiz(): Quiz {
       options: ['Kolosseum', 'Circus Maximus', 'Pantheon', 'Arena von Verona'],
       correctIndex: 0,
     };
-    pic.reward = { kind: 'item', label: '1 Tüte Gummibärchen' };
   }
   return quiz;
 }

@@ -5,10 +5,13 @@ const runKey = (quizId: string) => `partyquiz.run.${quizId}`;
 
 export interface TaskResult {
   taskId: string;
-  tier: TierId | null; // null bei Sachpreis-Aufgabe
+  tier: TierId | null; // null, wenn ein Sachpreis gewählt wurde
   correct: boolean;
   money: number;
+  /** gewonnener Sachpreis */
   item: string | null;
+  /** gewählter Sachpreis (auch wenn verloren – er ist dann trotzdem verbraucht) */
+  chosenItem: string | null;
   detail?: string;
   /** Original-Bild zur Auflösung (z. B. unverpixelt bei Bilderraten) */
   image?: string | null;
@@ -21,6 +24,10 @@ export interface RunState {
   index: number;
   phase: PlayPhase;
   tier: TierId | null;
+  /** Für diesen Task gewählter Sachpreis */
+  chosenItem: string | null;
+  /** Bereits gewählte (= verbrauchte) Sachpreise */
+  itemsUsed: string[];
   jokersLeft: Record<JokerId, number>;
   /** Im aktuellen Task aktivierte Joker */
   active: Record<JokerId, boolean>;
@@ -33,6 +40,8 @@ export function newRun(quiz: Quiz): RunState {
     index: 0,
     phase: 'intro',
     tier: null,
+    chosenItem: null,
+    itemsUsed: [],
     jokersLeft: { ...quiz.jokers },
     active: { askFriend: false, twoTries: false },
     results: [],
@@ -41,7 +50,10 @@ export function newRun(quiz: Quiz): RunState {
 
 export function loadQuizzes(): Quiz[] {
   try {
-    return JSON.parse(localStorage.getItem(QUIZZES_KEY) ?? '[]');
+    const quizzes: Quiz[] = JSON.parse(localStorage.getItem(QUIZZES_KEY) ?? '[]');
+    // ältere Speicherstände kennen den Sachpreis-Pool noch nicht
+    for (const q of quizzes) q.items ??= [];
+    return quizzes;
   } catch {
     return [];
   }

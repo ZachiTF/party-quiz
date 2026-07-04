@@ -20,7 +20,13 @@
     if (!quiz) return null;
     const saved = loadRun(id);
     // gespeicherten Spielstand nur übernehmen, wenn er noch zum Quiz passt
-    if (saved && saved.phase !== 'done' && saved.index <= quiz.tasks.length && saved.results) {
+    if (
+      saved &&
+      saved.phase !== 'done' &&
+      saved.index <= quiz.tasks.length &&
+      saved.results &&
+      Array.isArray(saved.itemsUsed)
+    ) {
       return saved;
     }
     return newRun(quiz);
@@ -39,35 +45,43 @@
   const items = $derived(run?.results.flatMap((r) => (r.item ? [r.item] : [])) ?? []);
   const maxAttempts = $derived(run?.active.twoTries ? 2 : 1);
   const lastResult = $derived(run?.results[run.results.length - 1]);
+  /** Noch nicht verbrauchte Sachpreise aus dem Pool */
+  const itemsAvailable = $derived((quiz?.items ?? []).filter((it) => !run?.itemsUsed.includes(it)));
 
-  function chooseTier(tier: TierId) {
+  // Joker werden VOR der Frage an-/abgewählt (Fehlklick kostet nichts) …
+  function toggleJoker(joker: JokerId) {
     if (!run) return;
+    if (run.active[joker]) run.active[joker] = false;
+    else if (run.jokersLeft[joker] > 0) run.active[joker] = true;
+  }
+
+  // … und erst beim Übergang zur Frage verbraucht
+  function advance(tier: TierId | null, item: string | null) {
+    if (!run) return;
+    for (const joker of JOKER_IDS) {
+      if (run.active[joker] && cat?.supportedJokers.includes(joker)) run.jokersLeft[joker]--;
+      else run.active[joker] = false;
+    }
     run.tier = tier;
+    run.chosenItem = item;
+    if (item) run.itemsUsed.push(item);
     run.phase = 'question';
-  }
-
-  function startItemTask() {
-    if (!run) return;
-    run.tier = null;
-    run.phase = 'question';
-  }
-
-  function useJoker(joker: JokerId) {
-    if (!run || run.jokersLeft[joker] <= 0 || run.active[joker]) return;
-    run.jokersLeft[joker]--;
-    run.active[joker] = true;
   }
 
   function handleResult(correct: boolean, detail?: string, image?: string) {
     if (!run || !quiz || !task) return;
-    const money =
-      task.reward.kind === 'money' && run.tier
-        ? correct
-          ? quiz.tiers[run.tier].win
-          : quiz.tiers[run.tier].base
-        : 0;
-    const item = task.reward.kind === 'item' && correct ? task.reward.label : null;
-    run.results.push({ taskId: task.id, tier: run.tier, correct, money, item, detail, image: image ?? null });
+    const money = run.tier ? (correct ? quiz.tiers[run.tier].win : quiz.tiers[run.tier].base) : 0;
+    const item = run.chosenItem && correct ? run.chosenItem : null;
+    run.results.push({
+      taskId: task.id,
+      tier: run.tier,
+      correct,
+      money,
+      item,
+      chosenItem: run.chosenItem,
+      detail,
+      image: image ?? null,
+    });
     run.phase = 'result';
   }
 
@@ -75,6 +89,7 @@
     if (!run || !quiz) return;
     run.index++;
     run.tier = null;
+    run.chosenItem = null;
     run.active = { askFriend: false, twoTries: false };
     run.phase = run.index >= quiz.tasks.length ? 'done' : 'intro';
   }
@@ -114,41 +129,48 @@
       <p class="muted">{cat.description}</p>
     </div>
 
-    {#if task.reward.kind === 'item'}
-      <div class="card" style="text-align: center">
-        <p>Bei dieser Aufgabe gibt es zu gewinnen:</p>
-        <h3>🎁 {task.reward.label || 'Überraschung'}</h3>
-        <button class="btn primary full" onclick={startItemTask}>Aufgabe zeigen</button>
-      </div>
-    {:else}
-      <p class="judge-hint">Wie viel willst du riskieren?</p>
-      <div class="tier-btns">
-        {#each TIER_IDS as tierId (tierId)}
-          <button class="btn tier" onclick={() => chooseTier(tierId)}>
-            <strong>{TIER_LABELS[tierId]}</strong>
-            <span class="tier-values">
-              sicher {formatEuro(quiz.tiers[tierId].base)}<br />
-              Gewinn {formatEuro(quiz.tiers[tierId].win)}
-            </span>
-          </button>
+    {#if cat.supportedJokers.some((j) => quiz.jokers[j] > 0)}
+      <p class="judge-hint">Joker für diese Aufgabe? (vor der Frage wählen)</p>
+      <div class="row">
+        {#each JOKER_IDS as joker (joker)}
+          {#if cat.supportedJokers.includes(joker)}
+            <button
+              class="btn small"
+              class:joker-on={run.active[joker]}
+              disabled={!run.active[joker] && run.jokersLeft[joker] <= 0}
+              onclick={() => toggleJoker(joker)}
+            >
+              {run.active[joker] ? '✔ ' : ''}{JOKER_LABELS[joker]} ({run.jokersLeft[joker]})
+            </button>
+          {/if}
         {/each}
       </div>
     {/if}
+
+    <p class="judge-hint">Worum spielst du?</p>
+    <div class="tier-btns">
+      {#each TIER_IDS as tierId (tierId)}
+        <button class="btn tier" onclick={() => advance(tierId, null)}>
+          <strong>{TIER_LABELS[tierId]}</strong>
+          <span class="tier-values">
+            sicher {formatEuro(quiz.tiers[tierId].base)}<br />
+            Gewinn {formatEuro(quiz.tiers[tierId].win)}
+          </span>
+        </button>
+      {/each}
+      {#each itemsAvailable as item (item)}
+        <button class="btn tier" onclick={() => advance(null, item)}>
+          <strong>🎁 {item}</strong>
+          <span class="tier-values">alles oder nichts<br />nur 1× wählbar</span>
+        </button>
+      {/each}
+    </div>
   {:else if run.phase === 'question' && task && cat}
     <div class="row">
-      {#each JOKER_IDS as joker (joker)}
-        {#if cat.supportedJokers.includes(joker)}
-          <button
-            class="btn small"
-            disabled={run.active[joker] || run.jokersLeft[joker] <= 0}
-            onclick={() => useJoker(joker)}
-          >
-            {JOKER_LABELS[joker]} ({run.jokersLeft[joker]})
-          </button>
-        {/if}
-      {/each}
-      {#if task.reward.kind === 'money' && run.tier}
+      {#if run.tier}
         <span class="badge">Einsatz: {TIER_LABELS[run.tier]}</span>
+      {:else if run.chosenItem}
+        <span class="badge item">🎁 {run.chosenItem}</span>
       {/if}
     </div>
 
@@ -175,6 +197,8 @@
       {/if}
       {#if lastResult.item}
         <p class="payout">🎁 {lastResult.item}</p>
+      {:else if lastResult.chosenItem}
+        <p class="payout muted">🎁 {lastResult.chosenItem} verpasst</p>
       {:else if lastResult.money > 0}
         <p class="payout">+{formatEuro(lastResult.money)}</p>
       {:else}
@@ -202,7 +226,9 @@
             <tr>
               <td>{taskIcon(r.taskId)} Aufgabe {i + 1}{r.tier ? ` (${TIER_LABELS[r.tier]})` : ''}</td>
               <td>{r.correct ? '✅' : '❌'}</td>
-              <td>{r.item ? `🎁 ${r.item}` : formatEuro(r.money)}</td>
+              <td>
+                {#if r.item}🎁 {r.item}{:else if r.chosenItem}🎁 {r.chosenItem} verpasst{:else}{formatEuro(r.money)}{/if}
+              </td>
             </tr>
           {/each}
         </tbody>
