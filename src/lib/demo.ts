@@ -9,7 +9,7 @@ export function createDemoQuiz(): Quiz {
     id: uid(),
     name: 'Beispiel-Quiz',
     seed,
-    tiers: autoTiers(1, 4),
+    tiers: autoTiers(1, 3),
     jokers: { askFriend: 1, twoTries: 1 },
     items: ['1 Tüte Gummibärchen', '1 Schokoriegel'],
     tasks: [],

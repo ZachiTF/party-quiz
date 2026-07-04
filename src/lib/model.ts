@@ -48,15 +48,16 @@ export function todaySeed(): string {
 }
 
 /**
- * Erzeugt die drei Einsatz-Stufen aus einem Min/Max-Betrag:
- * Klein = sicher, aber wenig; Groß = alles oder nichts.
+ * Builds the three stake tiers from a min/max amount so that the expected
+ * payout at a 50/50 winrate is identical for every tier: (base + win) / 2
+ * = max / 2, i.e. win = max - base. Small = safe but capped, big = all or
+ * nothing. Example 1-3 €: 1/2, 0.50/2.50, 0/3.
  */
 export function autoTiers(min: number, max: number): Record<TierId, TierValue> {
   const round = (n: number) => Math.round(n * 100) / 100;
-  const lerp = (t: number) => round(min + (max - min) * t);
   return {
-    small: { base: round(min), win: lerp(1 / 3) },
-    medium: { base: round(min / 2), win: lerp(2 / 3) },
+    small: { base: round(min), win: round(max - min) },
+    medium: { base: round(min / 2), win: round(max - min / 2) },
     big: { base: 0, win: round(max) },
   };
 }
@@ -66,7 +67,7 @@ export function createQuiz(): Quiz {
     id: uid(),
     name: 'Neues Quiz',
     seed: todaySeed(),
-    tiers: autoTiers(1, 4),
+    tiers: autoTiers(1, 3),
     jokers: { askFriend: 1, twoTries: 1 },
     items: [],
     tasks: [],

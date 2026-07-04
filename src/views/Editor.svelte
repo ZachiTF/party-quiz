@@ -41,7 +41,7 @@
   });
 
   let tierMin = $state(1);
-  let tierMax = $state(4);
+  let tierMax = $state(3);
   let expanded = $state<Record<string, boolean>>({});
   let previewing = $state<Record<string, number>>({});
   let previewResult = $state<Record<string, string>>({});
